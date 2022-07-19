@@ -4,6 +4,7 @@ import { getStakeConfig } from 'src/ui-config/stakeConfig';
 
 import { _useStakeDataRPC } from './_useStakeDataRPC';
 import { useC_StakeGeneralUiDataQuery, useC_StakeUserUiDataQuery } from './graphql/hooks';
+import { useStakeDataSubscription, useStore } from 'src/store/root';
 
 interface StakeDataProviderContextType {}
 
@@ -20,6 +21,9 @@ export const StakeDataProvider: React.FC = ({ children }) => {
   const stakeConfig = getStakeConfig();
   const { currentAccount } = useWeb3Context();
   const { refresh } = _useStakeDataRPC(currentAccount, stakeConfig.chainId);
+  useStakeDataSubscription();
+  const result = useStore((state) => state.test);
+  console.log(result);
   return (
     <StakeDataProviderContext.Provider value={{ refresh }}>
       {children}
