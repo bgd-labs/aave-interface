@@ -5,6 +5,7 @@ import {
 } from '@aave/contract-helpers';
 import { StateCreator } from 'zustand';
 import { RootStore } from './root';
+import { getDerivedProtocolDataValues } from './protocolDataSlice';
 
 // TODO: add chain/provider/account mapping
 export interface IncentiveSlice {
@@ -20,13 +21,15 @@ export const createIncentiveSlice: StateCreator<
   IncentiveSlice
 > = (set, get) => ({
   refreshIncentiveData: async () => {
+    const { currentMarketData, currentChainId, jsonRpcProvider } = getDerivedProtocolDataValues(
+      get()
+    );
+
     const account = get().account;
-    const currentMarketData = get().currentMarketData;
-    const currentChainId = get().currentChainId;
     if (!currentMarketData.addresses.UI_INCENTIVE_DATA_PROVIDER) return;
     const poolDataProviderContract = new UiIncentiveDataProvider({
       uiIncentiveDataProviderAddress: currentMarketData.addresses.UI_INCENTIVE_DATA_PROVIDER,
-      provider: get().jsonRpcProvider(),
+      provider: jsonRpcProvider,
       chainId: currentChainId,
     });
     const promises: Promise<void>[] = [];
