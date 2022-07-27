@@ -12,8 +12,6 @@ import { WalletSlice, createWalletSlice } from './walletSlice';
 import { PoolSlice, createPoolSlice } from './poolSlice';
 import { IncentiveSlice, createIncentiveSlice } from './incentiveSlice';
 import { GovernanceSlice, createGovernanceSlice } from './governanceSlice';
-import memoize from 'proxy-memoize';
-import { getNetworkConfig, getProvider, marketsData } from 'src/utils/marketsAndNetworksConfig';
 
 export type RootStore = StakeSlice &
   ProtocolDataSlice &
