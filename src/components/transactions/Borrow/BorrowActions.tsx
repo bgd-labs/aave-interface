@@ -6,6 +6,7 @@ import { ComputedReserveData } from 'src/hooks/app-data-provider/useAppDataProvi
 import { useProtocolDataContext } from 'src/hooks/useProtocolDataContext';
 import { useTxBuilderContext } from 'src/hooks/useTxBuilder';
 import { useWeb3Context } from 'src/libs/hooks/useWeb3Context';
+import { useRootStore } from 'src/store/root';
 import { optimizedPath } from 'src/utils/utils';
 import { TxActionsWrapper } from '../TxActionsWrapper';
 
@@ -29,38 +30,23 @@ export const BorrowActions = ({
   blocked,
   sx,
 }: BorrowActionsProps) => {
-  const { lendingPool } = useTxBuilderContext();
-  const { currentChainId: chainId, currentMarketData } = useProtocolDataContext();
+  const borrow = useRootStore((state) => state.borrow);
   const { currentAccount } = useWeb3Context();
 
   const { action, loadingTxns, mainTxState, approval, requiresApproval, approvalTxState } =
     useTransactionHandler({
       tryPermit: false,
       handleGetTxns: async () => {
-        if (currentMarketData.v3) {
-          return lendingPool.borrow({
-            interestRateMode,
-            user: currentAccount,
-            amount: amountToBorrow,
-            reserve: poolAddress,
-            debtTokenAddress:
-              interestRateMode === InterestRate.Variable
-                ? poolReserve.variableDebtTokenAddress
-                : poolReserve.stableDebtTokenAddress,
-            useOptimizedPath: optimizedPath(chainId),
-          });
-        } else {
-          return lendingPool.borrow({
-            interestRateMode,
-            user: currentAccount,
-            amount: amountToBorrow,
-            reserve: poolAddress,
-            debtTokenAddress:
-              interestRateMode === InterestRate.Variable
-                ? poolReserve.variableDebtTokenAddress
-                : poolReserve.stableDebtTokenAddress,
-          });
-        }
+        return borrow({
+          interestRateMode,
+          user: currentAccount,
+          amount: amountToBorrow,
+          reserve: poolAddress,
+          debtTokenAddress:
+            interestRateMode === InterestRate.Variable
+              ? poolReserve.variableDebtTokenAddress
+              : poolReserve.stableDebtTokenAddress,
+        });
       },
       skip: !amountToBorrow || amountToBorrow === '0' || blocked,
       deps: [amountToBorrow, interestRateMode],

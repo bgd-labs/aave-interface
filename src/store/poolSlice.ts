@@ -3,6 +3,7 @@ import {
   LendingPool,
   Pool,
   PoolBaseCurrencyHumanized,
+  PoolInterface,
   ReserveDataHumanized,
   UiPoolDataProvider,
   UserReserveDataHumanized,
@@ -27,7 +28,9 @@ export interface PoolSlice {
   };
   // methods
   mint: FaucetService['mint'];
-  withdraw: LendingPool['withdraw'];
+  withdraw: Pool['withdraw'];
+  borrow: Pool['borrow'];
+  setUsageAsCollateral: Pool['setUsageAsCollateral'];
 }
 
 export const createPoolSlice: StateCreator<
@@ -165,6 +168,7 @@ export const createPoolSlice: StateCreator<
         console.log('error fetching pool data');
       }
     },
+    // faucet
     mint: (...args) => {
       const { currentMarketData, jsonRpcProvider } = getDerivedProtocolDataValues(get());
       if (!currentMarketData.addresses.FAUCET)
@@ -172,10 +176,25 @@ export const createPoolSlice: StateCreator<
       const service = new FaucetService(jsonRpcProvider, currentMarketData.addresses.FAUCET);
       return service.mint(...args);
     },
+    // lending pool
+    // TODO: might make sense to remove currentAccount from args and fetch it from store directly
     withdraw: (args) => {
       const { currentChainId } = getDerivedProtocolDataValues(get());
       const pool = getCorrectPool();
       return pool.withdraw({ ...args, useOptimizedPath: optimizedPath(currentChainId) });
+    },
+    borrow: (args) => {
+      const { currentChainId } = getDerivedProtocolDataValues(get());
+      const pool = getCorrectPool();
+      return pool.borrow({ ...args, useOptimizedPath: optimizedPath(currentChainId) });
+    },
+    setUsageAsCollateral: (args) => {
+      const { currentChainId } = getDerivedProtocolDataValues(get());
+      const pool = getCorrectPool();
+      return pool.setUsageAsCollateral({
+        ...args,
+        useOptimizedPath: optimizedPath(currentChainId),
+      });
     },
   };
 };
