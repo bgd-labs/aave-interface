@@ -3,7 +3,6 @@ import {
   LendingPool,
   Pool,
   PoolBaseCurrencyHumanized,
-  PoolInterface,
   ReserveDataHumanized,
   UiPoolDataProvider,
   UserReserveDataHumanized,
@@ -188,7 +187,8 @@ export const createPoolSlice: StateCreator<
       const pool = getCorrectPool();
       return pool.borrow({ ...args, useOptimizedPath: optimizedPath(currentChainId) });
     },
-    setUsageAsCollateral: (args) => {
+    // the async wrapper here is a bit unnecessary, but needed because of wrong types on the library https://github.com/aave/aave-utilities/pull/395
+    setUsageAsCollateral: async (args) => {
       const { currentChainId } = getDerivedProtocolDataValues(get());
       const pool = getCorrectPool();
       return pool.setUsageAsCollateral({
