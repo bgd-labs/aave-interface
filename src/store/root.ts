@@ -3,7 +3,11 @@ import { devtools, persist } from 'zustand/middleware';
 import { createSingletonSubscriber } from './utils/createSingletonSubscriber';
 
 import { StakeSlice, createStakeSlice } from './stakeSlice';
-import { ProtocolDataSlice, createProtocolDataSlice } from './protocolDataSlice';
+import {
+  ProtocolDataSlice,
+  createProtocolDataSlice,
+  getDerivedProtocolDataValues,
+} from './protocolDataSlice';
 import { WalletSlice, createWalletSlice } from './walletSlice';
 import { PoolSlice, createPoolSlice } from './poolSlice';
 import { IncentiveSlice, createIncentiveSlice } from './incentiveSlice';
@@ -51,7 +55,8 @@ export const useRootStore = create<RootStore>()(
       },
       {
         name: 'session-storage',
-        partialize: () => ({
+        partialize: (state) => ({
+          currentMarket: state.currentMarket,
           // TODO: decide what to store, some values might be problematic as they rely on context
           // currentMarket: state.currentMarket,
           // account: state.account,
@@ -82,3 +87,9 @@ export const useIncentiveDataSubscription = createSingletonSubscriber(() => {
 export const useGovernanceDataSubscription = createSingletonSubscriber(() => {
   return useRootStore.getState().refreshGovernanceData();
 }, 60000);
+
+export const useProtocolData = () => {
+  const values = useRootStore(getDerivedProtocolDataValues);
+  const [setCurrentMarket] = useRootStore((store) => [store.setCurrentMarket]);
+  return { ...values, setCurrentMarket };
+};

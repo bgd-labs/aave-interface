@@ -22,14 +22,14 @@ export const TxBuilderProvider: React.FC<{ children: ReactElement }> = ({ childr
 
   let lendingPool;
   if (!currentMarketData.v3) {
-    lendingPool = new LendingPool(jsonRpcProvider(), {
+    lendingPool = new LendingPool(jsonRpcProvider, {
       LENDING_POOL: currentMarketData.addresses.LENDING_POOL,
       REPAY_WITH_COLLATERAL_ADAPTER: currentMarketData.addresses.REPAY_WITH_COLLATERAL_ADAPTER,
       SWAP_COLLATERAL_ADAPTER: currentMarketData.addresses.SWAP_COLLATERAL_ADAPTER,
       WETH_GATEWAY: currentMarketData.addresses.WETH_GATEWAY,
     });
   } else {
-    lendingPool = new Pool(jsonRpcProvider(), {
+    lendingPool = new Pool(jsonRpcProvider, {
       POOL: currentMarketData.addresses.LENDING_POOL,
       REPAY_WITH_COLLATERAL_ADAPTER: currentMarketData.addresses.REPAY_WITH_COLLATERAL_ADAPTER,
       SWAP_COLLATERAL_ADAPTER: currentMarketData.addresses.SWAP_COLLATERAL_ADAPTER,
@@ -39,10 +39,10 @@ export const TxBuilderProvider: React.FC<{ children: ReactElement }> = ({ childr
   }
 
   const incentivesTxBuilder: IncentivesControllerInterface = new IncentivesController(
-    jsonRpcProvider()
+    jsonRpcProvider
   );
   const incentivesTxBuilderV2: IncentivesControllerV2Interface = new IncentivesControllerV2(
-    jsonRpcProvider()
+    jsonRpcProvider
   );
 
   return (

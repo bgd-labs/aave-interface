@@ -3,6 +3,7 @@ import { stakeConfig } from 'src/ui-config/stakeConfig';
 import { getProvider } from 'src/utils/marketsAndNetworksConfig';
 import { StateCreator } from 'zustand';
 import { RootStore } from './root';
+import { getDerivedProtocolDataValues } from './protocolDataSlice';
 
 export type StakeGeneralUiData = {
   usdPriceEth: string;
@@ -64,11 +65,11 @@ export const createStakeSlice: StateCreator<
   StakeSlice
 > = (set, get) => {
   function getCorrectProvider() {
-    const currentNetworkConfig = get().currentNetworkConfig;
+    const { currentNetworkConfig, jsonRpcProvider } = getDerivedProtocolDataValues(get());
     const isStakeFork =
       currentNetworkConfig.isFork &&
       currentNetworkConfig.underlyingChainId === stakeConfig?.chainId;
-    return isStakeFork ? get().jsonRpcProvider() : getProvider(stakeConfig.chainId);
+    return isStakeFork ? jsonRpcProvider : getProvider(stakeConfig.chainId);
   }
   return {
     stakeDataLoading: true,

@@ -1,5 +1,6 @@
 import { WalletBalanceProvider } from '@aave/contract-helpers';
 import { StateCreator } from 'zustand';
+import { getDerivedProtocolDataValues } from './protocolDataSlice';
 import { RootStore } from './root';
 
 type WalletBalance = { address: string; amount: string };
@@ -36,9 +37,10 @@ export const createWalletSlice: StateCreator<
   },
   computed: {
     get currentWalletBalances() {
+      const { currentMarketData, currentChainId } = getDerivedProtocolDataValues(get());
       return (
-        get()?.walletBalances?.[get().account]?.[get().currentChainId]?.[
-          get().currentMarketData.addresses.LENDING_POOL_ADDRESS_PROVIDER
+        get()?.walletBalances?.[get().account]?.[currentChainId]?.[
+          currentMarketData.addresses.LENDING_POOL_ADDRESS_PROVIDER
         ] || []
       );
     },
@@ -46,11 +48,12 @@ export const createWalletSlice: StateCreator<
   refetchWalletBalances: async () => {
     const account = get().account;
     if (!account) return;
-    const currentMarketData = get().currentMarketData;
-    const currentChainId = get().currentChainId;
+    const { currentMarketData, currentChainId, jsonRpcProvider } = getDerivedProtocolDataValues(
+      get()
+    );
     const contract = new WalletBalanceProvider({
       walletBalanceProviderAddress: currentMarketData.addresses.WALLET_BALANCE_PROVIDER,
-      provider: get().jsonRpcProvider(),
+      provider: jsonRpcProvider,
     });
     const lendingPoolAddressProvider = currentMarketData.addresses.LENDING_POOL_ADDRESS_PROVIDER;
     try {

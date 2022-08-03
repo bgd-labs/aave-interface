@@ -9,6 +9,7 @@ import { RootStore } from './root';
 import { governanceConfig } from 'src/ui-config/governanceConfig';
 import { getProvider } from 'src/utils/marketsAndNetworksConfig';
 import { normalize, valueToBigNumber } from '@aave/math-utils';
+import { getDerivedProtocolDataValues } from './protocolDataSlice';
 
 export interface GovernanceSlice {
   powers?: {
@@ -38,11 +39,11 @@ export const createGovernanceSlice: StateCreator<
   GovernanceSlice
 > = (set, get) => {
   function getCorrectProvider() {
-    const currentNetworkConfig = get().currentNetworkConfig;
+    const { currentNetworkConfig, jsonRpcProvider } = getDerivedProtocolDataValues(get());
     const isStakeFork =
       currentNetworkConfig.isFork &&
       currentNetworkConfig.underlyingChainId === governanceConfig?.chainId;
-    return isStakeFork ? get().jsonRpcProvider() : getProvider(governanceConfig.chainId);
+    return isStakeFork ? jsonRpcProvider : getProvider(governanceConfig.chainId);
   }
   return {
     delegateByType: (args) => {

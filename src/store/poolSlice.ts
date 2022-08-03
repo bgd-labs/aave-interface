@@ -10,6 +10,7 @@ import {
 import { optimizedPath } from 'src/utils/utils';
 import { StateCreator } from 'zustand';
 import { RootStore } from './root';
+import { getDerivedProtocolDataValues } from './protocolDataSlice';
 
 // TODO: add chain/provider/account mapping
 export interface PoolSlice {
@@ -26,7 +27,9 @@ export interface PoolSlice {
   };
   // methods
   mint: FaucetService['mint'];
-  withdraw: LendingPool['withdraw'];
+  withdraw: Pool['withdraw'];
+  borrow: Pool['borrow'];
+  setUsageAsCollateral: Pool['setUsageAsCollateral'];
 }
 
 export const createPoolSlice: StateCreator<
@@ -36,10 +39,9 @@ export const createPoolSlice: StateCreator<
   PoolSlice
 > = (set, get) => {
   function getCorrectPool() {
-    const currentMarketData = get().currentMarketData;
-    const provider = get().jsonRpcProvider();
+    const { currentMarketData, jsonRpcProvider } = getDerivedProtocolDataValues(get());
     if (currentMarketData.v3) {
-      return new Pool(provider, {
+      return new Pool(jsonRpcProvider, {
         POOL: currentMarketData.addresses.LENDING_POOL,
         REPAY_WITH_COLLATERAL_ADAPTER: currentMarketData.addresses.REPAY_WITH_COLLATERAL_ADAPTER,
         SWAP_COLLATERAL_ADAPTER: currentMarketData.addresses.SWAP_COLLATERAL_ADAPTER,
@@ -47,7 +49,7 @@ export const createPoolSlice: StateCreator<
         L2_ENCODER: currentMarketData.addresses.L2_ENCODER,
       });
     } else {
-      return new LendingPool(provider, {
+      return new LendingPool(jsonRpcProvider, {
         LENDING_POOL: currentMarketData.addresses.LENDING_POOL,
         REPAY_WITH_COLLATERAL_ADAPTER: currentMarketData.addresses.REPAY_WITH_COLLATERAL_ADAPTER,
         SWAP_COLLATERAL_ADAPTER: currentMarketData.addresses.SWAP_COLLATERAL_ADAPTER,
@@ -58,30 +60,34 @@ export const createPoolSlice: StateCreator<
   return {
     computed: {
       get currentUserEmodeCategoryId() {
+        const { currentMarketData, currentChainId } = getDerivedProtocolDataValues(get());
         return (
-          get()?.userEmodeCategoryId?.[get().currentChainId]?.[
-            get().currentMarketData.addresses.LENDING_POOL_ADDRESS_PROVIDER
+          get()?.userEmodeCategoryId?.[currentChainId]?.[
+            currentMarketData.addresses.LENDING_POOL_ADDRESS_PROVIDER
           ] || 0
         );
       },
       get currentUserReserves() {
+        const { currentMarketData, currentChainId } = getDerivedProtocolDataValues(get());
         return (
-          get()?.userReserves?.[get().currentChainId]?.[
-            get().currentMarketData.addresses.LENDING_POOL_ADDRESS_PROVIDER
+          get()?.userReserves?.[currentChainId]?.[
+            currentMarketData.addresses.LENDING_POOL_ADDRESS_PROVIDER
           ] || []
         );
       },
       get currentReserves() {
+        const { currentMarketData, currentChainId } = getDerivedProtocolDataValues(get());
         return (
-          get()?.reserves?.[get().currentChainId]?.[
-            get().currentMarketData.addresses.LENDING_POOL_ADDRESS_PROVIDER
+          get()?.reserves?.[currentChainId]?.[
+            currentMarketData.addresses.LENDING_POOL_ADDRESS_PROVIDER
           ] || []
         );
       },
       get currentBaseCurrencyData() {
+        const { currentMarketData, currentChainId } = getDerivedProtocolDataValues(get());
         return (
-          get()?.baseCurrencyData?.[get().currentChainId]?.[
-            get().currentMarketData.addresses.LENDING_POOL_ADDRESS_PROVIDER
+          get()?.baseCurrencyData?.[currentChainId]?.[
+            currentMarketData.addresses.LENDING_POOL_ADDRESS_PROVIDER
           ] || {
             marketReferenceCurrencyDecimals: 0,
             marketReferenceCurrencyPriceInUsd: '0',
@@ -92,12 +98,14 @@ export const createPoolSlice: StateCreator<
       },
     },
     refreshPoolData: async () => {
+      const { currentMarketData, jsonRpcProvider, currentChainId } = getDerivedProtocolDataValues(
+        get()
+      );
+
       const account = get().account;
-      const currentMarketData = get().currentMarketData;
-      const currentChainId = get().currentChainId;
       const poolDataProviderContract = new UiPoolDataProvider({
         uiPoolDataProviderAddress: currentMarketData.addresses.UI_POOL_DATA_PROVIDER,
-        provider: get().jsonRpcProvider(),
+        provider: jsonRpcProvider,
         chainId: currentChainId,
       });
       const lendingPoolAddressProvider = currentMarketData.addresses.LENDING_POOL_ADDRESS_PROVIDER;
@@ -159,18 +167,34 @@ export const createPoolSlice: StateCreator<
         console.log('error fetching pool data');
       }
     },
+    // faucet
     mint: (...args) => {
-      if (!get().currentMarketData.addresses.FAUCET)
+      const { currentMarketData, jsonRpcProvider } = getDerivedProtocolDataValues(get());
+      if (!currentMarketData.addresses.FAUCET)
         throw Error('currently selected market does not have a faucet attached');
-      const service = new FaucetService(
-        get().jsonRpcProvider(),
-        get().currentMarketData.addresses.FAUCET
-      );
+      const service = new FaucetService(jsonRpcProvider, currentMarketData.addresses.FAUCET);
       return service.mint(...args);
     },
+    // lending pool
+    // TODO: might make sense to remove currentAccount from args and fetch it from store directly
     withdraw: (args) => {
+      const { currentChainId } = getDerivedProtocolDataValues(get());
       const pool = getCorrectPool();
-      return pool.withdraw({ ...args, useOptimizedPath: optimizedPath(get().currentChainId) });
+      return pool.withdraw({ ...args, useOptimizedPath: optimizedPath(currentChainId) });
+    },
+    borrow: (args) => {
+      const { currentChainId } = getDerivedProtocolDataValues(get());
+      const pool = getCorrectPool();
+      return pool.borrow({ ...args, useOptimizedPath: optimizedPath(currentChainId) });
+    },
+    // the async wrapper here is a bit unnecessary, but needed because of wrong types on the library https://github.com/aave/aave-utilities/pull/395
+    setUsageAsCollateral: async (args) => {
+      const { currentChainId } = getDerivedProtocolDataValues(get());
+      const pool = getCorrectPool();
+      return pool.setUsageAsCollateral({
+        ...args,
+        useOptimizedPath: optimizedPath(currentChainId),
+      });
     },
   };
 };
