@@ -4,7 +4,6 @@ import {
   IncentivesControllerV2,
   IncentivesControllerV2Interface,
   LendingPool,
-  Pool,
   PoolInterface,
 } from '@aave/contract-helpers';
 import React, { ReactElement } from 'react';
@@ -18,25 +17,7 @@ export interface TxBuilderContextInterface {
 }
 
 export const TxBuilderProvider: React.FC<{ children: ReactElement }> = ({ children }) => {
-  const { currentMarketData, jsonRpcProvider } = useProtocolDataContext();
-
-  let lendingPool;
-  if (!currentMarketData.v3) {
-    lendingPool = new LendingPool(jsonRpcProvider(), {
-      LENDING_POOL: currentMarketData.addresses.LENDING_POOL,
-      REPAY_WITH_COLLATERAL_ADAPTER: currentMarketData.addresses.REPAY_WITH_COLLATERAL_ADAPTER,
-      SWAP_COLLATERAL_ADAPTER: currentMarketData.addresses.SWAP_COLLATERAL_ADAPTER,
-      WETH_GATEWAY: currentMarketData.addresses.WETH_GATEWAY,
-    });
-  } else {
-    lendingPool = new Pool(jsonRpcProvider(), {
-      POOL: currentMarketData.addresses.LENDING_POOL,
-      REPAY_WITH_COLLATERAL_ADAPTER: currentMarketData.addresses.REPAY_WITH_COLLATERAL_ADAPTER,
-      SWAP_COLLATERAL_ADAPTER: currentMarketData.addresses.SWAP_COLLATERAL_ADAPTER,
-      WETH_GATEWAY: currentMarketData.addresses.WETH_GATEWAY,
-      L2_ENCODER: currentMarketData.addresses.L2_ENCODER,
-    });
-  }
+  const { jsonRpcProvider } = useProtocolDataContext();
 
   const incentivesTxBuilder: IncentivesControllerInterface = new IncentivesController(
     jsonRpcProvider()
@@ -46,7 +27,7 @@ export const TxBuilderProvider: React.FC<{ children: ReactElement }> = ({ childr
   );
 
   return (
-    <TxBuilderContext.Provider value={{ lendingPool, incentivesTxBuilder, incentivesTxBuilderV2 }}>
+    <TxBuilderContext.Provider value={{ incentivesTxBuilder, incentivesTxBuilderV2 }}>
       {children}
     </TxBuilderContext.Provider>
   );

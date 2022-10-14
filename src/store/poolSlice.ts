@@ -14,7 +14,10 @@ import {
   LPSetUsageAsCollateral,
   LPSwapBorrowRateMode,
 } from '@aave/contract-helpers/dist/esm/lendingPool-contract/lendingPoolTypes';
-import { LPSupplyWithPermitType } from '@aave/contract-helpers/dist/esm/v3-pool-contract/lendingPoolTypes';
+import {
+  LPSignERC20ApprovalType,
+  LPSupplyWithPermitType,
+} from '@aave/contract-helpers/dist/esm/v3-pool-contract/lendingPoolTypes';
 import { normalize } from '@aave/math-utils';
 import { SignatureLike } from '@ethersproject/bytes';
 import { produce } from 'immer';
@@ -61,6 +64,8 @@ export interface PoolSlice {
   supplyWithPermit: (
     args: Omit<LPSupplyWithPermitType, 'user'>
   ) => Promise<EthereumTransactionTypeExtended[]>;
+  setUserEMode: (categoryId: number) => Promise<EthereumTransactionTypeExtended[]>;
+  signERC20Approval: (args: Omit<LPSignERC20ApprovalType, 'user'>) => Promise<string>;
   // TODO: optimize types to use only neccessary properties
   swapCollateral: (args: SwapActionProps) => Promise<EthereumTransactionTypeExtended[]>;
   repay: (args: RepayActionProps) => Promise<EthereumTransactionTypeExtended[]>;
@@ -345,6 +350,22 @@ export const createPoolSlice: StateCreator<
         flash: useFlashLoan,
         augustus,
         swapCallData,
+      });
+    },
+    setUserEMode: async (categoryId) => {
+      const pool = getCorrectPool() as Pool;
+      const user = get().account;
+      return pool.setUserEMode({
+        user,
+        categoryId,
+      });
+    },
+    signERC20Approval: async (args) => {
+      const pool = getCorrectPool() as Pool;
+      const user = get().account;
+      return pool.signERC20Approval({
+        ...args,
+        user,
       });
     },
     useOptimizedPath: () => {
