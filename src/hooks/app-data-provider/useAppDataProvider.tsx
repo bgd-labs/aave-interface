@@ -11,7 +11,7 @@ import React, { useContext } from 'react';
 import { EmodeCategory } from 'src/helpers/types';
 import { useWeb3Context } from 'src/libs/hooks/useWeb3Context';
 import { useRootStore } from 'src/store/root';
-import { fetchIconSymbolAndName, STABLE_ASSETS } from 'src/ui-config/reservePatches';
+import { fetchIconSymbolAndName } from 'src/ui-config/reservePatches';
 
 import {
   reserveSortFn,

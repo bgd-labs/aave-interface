@@ -1,11 +1,7 @@
 import { Trans } from '@lingui/macro';
 import { Reward } from 'src/helpers/types';
 import { useTransactionHandler } from 'src/helpers/useTransactionHandler';
-import { useAppDataContext } from 'src/hooks/app-data-provider/useAppDataProvider';
-import { useProtocolDataContext } from 'src/hooks/useProtocolDataContext';
-import { useWeb3Context } from 'src/libs/hooks/useWeb3Context';
 import { useRootStore } from 'src/store/root';
-import { useStore } from 'zustand';
 
 import { TxActionsWrapper } from '../TxActionsWrapper';
 
