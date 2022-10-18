@@ -10,7 +10,7 @@ import { StateCreator } from 'zustand';
 import { CustomMarket, MarketDataType } from '../ui-config/marketsConfig';
 import { NetworkConfig } from '../ui-config/networksConfig';
 import { RootStore } from './root';
-import { getQueryParameter, setQueryParameter } from './utils/queryParams';
+import { setQueryParameter } from './utils/queryParams';
 
 export interface ProtocolDataSlice {
   currentMarket: CustomMarket;
@@ -22,9 +22,7 @@ export interface ProtocolDataSlice {
 }
 
 const getCurrentMarket = (): CustomMarket => {
-  const preselectedMarket =
-    getQueryParameter('marketName') ||
-    (typeof localStorage !== 'undefined' && localStorage.getItem('marketName'));
+  const preselectedMarket = availableMarkets[0];
 
   return availableMarkets.includes(preselectedMarket as CustomMarket)
     ? (preselectedMarket as CustomMarket)
@@ -33,7 +31,7 @@ const getCurrentMarket = (): CustomMarket => {
 
 export const createProtocolDataSlice: StateCreator<
   RootStore,
-  [['zustand/devtools', never], ['zustand/persist', unknown]],
+  [['zustand/devtools', never]],
   [],
   ProtocolDataSlice
 > = (set, get) => {
