@@ -41,7 +41,6 @@ export const useRootStore = create<RootStore>()(
         name: 'session-storage',
         partialize: () => ({
           // TODO: decide what to store, some values might be problematic as they rely on context
-          // currentMarket: state.currentMarket,
           // account: state.account,
           // currentMarketData: state.currentMarketData,
           // currentChainId: state.currentChainId,
