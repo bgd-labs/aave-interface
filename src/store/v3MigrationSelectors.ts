@@ -127,7 +127,7 @@ export const selectUserReservesForMigration = (store: RootStore, timestamp: numb
   } else {
     // normal == non isolated
     const anyNormalCollateral = assetsToProcess.some(
-      (r) => !v3ReservesMap[r.underlyingAsset].reserve.isIsolated
+      (r) => !v3ReservesMap[r.underlyingAsset].reserve.isIsolated // TODO: or if one of them enforced ??
     );
     if (!anyNormalCollateral) {
       // TODO: set usage as collateral to TRUE for this asset before pushing
