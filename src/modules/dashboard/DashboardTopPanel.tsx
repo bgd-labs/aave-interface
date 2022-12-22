@@ -41,7 +41,8 @@ export const DashboardTopPanel = () => {
   const { openClaimRewards } = useModalContext();
 
   const isMigrateToV3Available = useRootStore((state) => selectIsMigrationAvailable(state));
-  const showMigrateButton = isMigrateToV3Available && Number(user.totalLiquidityUSD) > 0;
+  const showMigrateButton =
+    isMigrateToV3Available && currentAccount !== '' && Number(user.totalLiquidityUSD) > 0;
   const theme = useTheme();
   const downToSM = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -86,8 +87,8 @@ export const DashboardTopPanel = () => {
     user?.totalCollateralMarketReferenceCurrency === '0'
       ? '0'
       : valueToBigNumber(user?.totalBorrowsMarketReferenceCurrency || '0')
-          .dividedBy(user?.totalCollateralMarketReferenceCurrency || '1')
-          .toFixed();
+        .dividedBy(user?.totalCollateralMarketReferenceCurrency || '1')
+        .toFixed();
 
   const valueTypographyVariant = downToSM ? 'main16' : 'main21';
   const noDataTypographyVariant = downToSM ? 'secondary16' : 'secondary21';
