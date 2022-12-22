@@ -100,23 +100,13 @@ export const selectUserReservesForMigration = (store: RootStore, timestamp: numb
 
   // if user already have some assets with usageAsCollateral true, then he can't define usage as collateral flags
   // but still we need to compute flags for assetsToProcess with respect to isolation mode
-  if (
-    v3ReservesUserSummary.totalCollateralUSD !== '0' ||
-    userReserveV3Data.some((r) => r.usageAsCollateralEnabledOnUser)
-  ) {
+  if (userReserveV3Data.some((r) => r.usageAsCollateralEnabledOnUser)) {
     // if user has some isolated asset as collateral
     if (userReserveV3Data.some((r) => r.reserve.isIsolated && r.usageAsCollateralEnabledOnUser)) {
       // TODO: disable usage as collateral on all assetsToProcess except the isolated one, and move to supplyReservesFinal
       // also do not allow to change the enable/disable switch state
       supplyReservesFinal.push(
         ...assetsToProcess.map((r) => {
-          if (
-            v3ReservesMap[r.underlyingAsset].usageAsCollateralEnabledOnUser &&
-            v3ReservesMap[r.underlyingAsset].reserve.isIsolated
-          ) {
-            // TODO: set usage as collateral to TRUE
-            return r;
-          }
           // TODO: set usage as collateral to FALSE
           return r;
         })
