@@ -55,11 +55,13 @@ export const selectMappedBorrowPositionsForMigration = (store: RootStore, timest
 };
 
 export const selectUserReservesForMigration = (store: RootStore, timestamp: number) => {
+  // initial v3 state
   const { userReservesData: userReserveV3Data, ...v3ReservesUserSummary } = selectV3UserSummary(
     store,
     timestamp
   );
 
+  // initial v2 state
   const { userReservesData: userReservesV2Data, ...v2ReservesUserSummary } =
     selectUserSummaryAndIncentives(store, timestamp);
 
@@ -77,6 +79,77 @@ export const selectUserReservesForMigration = (store: RootStore, timestamp: numb
   const borrowReserves = userReservesV2Data.filter(
     (reserve) => reserve.variableBorrows != '0' || reserve.stableBorrows != '0'
   );
+  // TODO: minor, (some of the logical branches here we can remove if we will start with usageAsCollateral false for all assets
+
+  let assetsToProcess = supplyReserves.filter(() => false); // TODO: fix, should be empty array
+
+  // all assets which are already deposited to v3 should have the same usageAsCollateral flag and user can't change it
+  const supplyReservesFinal = supplyReserves.filter((userReserve) => {
+    if (v3ReservesMap[userReserve.underlyingAsset].underlyingBalance != '0') {
+      // TODO: set the same usage as collateral flag as on v3
+      return true;
+    }
+    assetsToProcess.push(userReserve);
+    return false;
+  });
+
+  // it seems that all assets user going to migrate are already on v3, nothing else to do
+  if (!assetsToProcess.length) {
+    // TODO: it's over, return
+  }
+
+  // if user already have some assets with usageAsCollateral true, then he can't define usage as collateral flags
+  // but still we need to compute flags for assetsToProcess with respect to isolation mode
+  if (
+    v3ReservesUserSummary.totalCollateralUSD !== '0' ||
+    userReserveV3Data.some((r) => r.usageAsCollateralEnabledOnUser)
+  ) {
+    // if user has some isolated asset as collateral
+    if (userReserveV3Data.some((r) => r.reserve.isIsolated && r.usageAsCollateralEnabledOnUser)) {
+      // TODO: disable usage as collateral on all assetsToProcess except the isolated one, and move to supplyReservesFinal
+      // also do not allow to change the enable/disable switch state
+      supplyReservesFinal.push(
+        ...assetsToProcess.map((r) => {
+          if (
+            v3ReservesMap[r.underlyingAsset].usageAsCollateralEnabledOnUser &&
+            v3ReservesMap[r.underlyingAsset].reserve.isIsolated
+          ) {
+            // TODO: set usage as collateral to TRUE
+            return r;
+          }
+          // TODO: set usage as collateral to FALSE
+          return r;
+        })
+      );
+    } else {
+      supplyReservesFinal.push(
+        ...assetsToProcess.map((r) => {
+          if (v3ReservesMap[r.underlyingAsset].reserve.isIsolated) {
+            // TODO: set usage as collateral to FALSE
+            return r;
+          }
+          // TODO: set usage as collateral to TRUE
+          return r;
+        })
+      ); // why types broken...
+    }
+    assetsToProcess = [];
+  } else {
+    // normal == non isolated
+    const anyNormalCollateral = assetsToProcess.some(
+      (r) => !v3ReservesMap[r.underlyingAsset].reserve.isIsolated
+    );
+    if (!anyNormalCollateral) {
+      // TODO: set usage as collateral to TRUE for this asset before pushing
+      supplyReservesFinal.push(assetsToProcess[0]);
+      assetsToProcess.shift();
+    }
+    if (!assetsToProcess.length) {
+      // TODO: it's over, return
+    }
+    // TODO: if we have any isolated enforced by user to true - set it to true, rest false
+    // TODO: if we don't set all isolated to false, rest to true
+  }
 
   const mappedSupplyReserves = supplyReserves.map((userReserve) => {
     // TODO: make dynamic mapping for enabled as collateral
