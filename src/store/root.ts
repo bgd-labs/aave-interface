@@ -10,6 +10,7 @@ import { createProtocolDataSlice, ProtocolDataSlice } from './protocolDataSlice'
 import { createStakeSlice, StakeSlice } from './stakeSlice';
 import { createSingletonSubscriber } from './utils/createSingletonSubscriber';
 import { getQueryParameter } from './utils/queryParams';
+import { createV3MigrationSlice, V3MigrationSlice } from './v3MigrationSlice';
 import { createWalletSlice, WalletSlice } from './walletSlice';
 
 enableMapSet();
@@ -19,7 +20,8 @@ export type RootStore = StakeSlice &
   WalletSlice &
   PoolSlice &
   IncentiveSlice &
-  GovernanceSlice;
+  GovernanceSlice &
+  V3MigrationSlice;
 
 export const useRootStore = create<RootStore>()(
   devtools((...args) => {
@@ -30,6 +32,7 @@ export const useRootStore = create<RootStore>()(
       ...createPoolSlice(...args),
       ...createIncentiveSlice(...args),
       ...createGovernanceSlice(...args),
+      ...createV3MigrationSlice(...args),
     };
   })
 );
@@ -62,6 +65,10 @@ export const useWalletBalancesSubscription = createSingletonSubscriber(() => {
 
 export const usePoolDataSubscription = createSingletonSubscriber(() => {
   return useRootStore.getState().refreshPoolData();
+}, 60000);
+
+export const usePoolDataV3Subscription = createSingletonSubscriber(() => {
+  return useRootStore.getState().refreshPoolV3Data();
 }, 60000);
 
 export const useIncentiveDataSubscription = createSingletonSubscriber(() => {
