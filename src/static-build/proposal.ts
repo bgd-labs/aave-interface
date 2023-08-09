@@ -42,6 +42,8 @@ export class Proposal {
     const value = db.chain.get('proposals').find({ id }).value();
     if (value && isProposalStateImmutable(value)) return value;
     const { values, ...rest } = await governanceContract.getProposal({ proposalId: id });
+    if (id == 291)
+      rest.ipfsHash = '0xd1bfa4950530040dadfdb171ab4f6dfeb0d96983923f90c21e072427fb566888';
     const proposal = await enhanceProposalWithTimes(rest);
     // only store data when it can no longer change
     if (value) {
